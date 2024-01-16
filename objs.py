@@ -22,7 +22,7 @@ class Clickable:
       return False
 
     if self.in_boundary():
-      on_click(args)
+      on_click(*args)
       return True
     
     return False

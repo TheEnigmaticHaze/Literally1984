@@ -1,9 +1,12 @@
+from objs import Clickable, Draggable
+from gameplay import GameState
+from setting import gameSetting
+
 from random import randint, choice
 from enum import Enum
-from objs import Clickable, Draggable
 import pygame
 
-seen_documents = set()
+seen_prompts = set()
 
 TRY_COUNT = 100
 
@@ -91,10 +94,10 @@ def generate_date():
 def generate_random_document():
   prompt = choice(DOCUMENT_PROMPTS)
   for to_replace in REPLACEMENTS.keys():
-    prompt.replace(to_replace, str(choice(REPLACEMENTS[to_replace])))
+    prompt = prompt.replace(to_replace, str(choice(REPLACEMENTS[to_replace])))
   return prompt
 
-def produce_document(seen_documents):
+def produce_prompt(seen_documents):
   for i in range(TRY_COUNT):
     new_document = generate_random_document()
     if new_document in seen_documents:
@@ -196,8 +199,8 @@ def draw_paper(screen : pygame.Surface, paper_type : PaperType, draw_rect : pyga
 
 class Paper(Draggable):
   def __init__(self, paper_type : PaperType, initial_position):
-    self.prompt = produce_document(seen_documents)
-    self.position = [0, 0]
+    self.prompt = produce_prompt(seen_prompts)
+    self.position = initial_position
     self.paper_type = paper_type
 
     self.paragraph_end = randint(MIN_PARAGRAPH_LENGTH, MAX_PARAGRAPH_LENGTH)
@@ -206,3 +209,35 @@ class Paper(Draggable):
     self.click_boundary = paper_type.value
     self.draw_function = draw_paper
   
+  def display_paper(self, screen : pygame.Surface, game_state : GameState, font : pygame.font.Font):
+    game_state
+
+    paper_height = 0
+    paper_width = 0
+    paper_color = pygame.color.Color(0, 0, 0)
+
+    if self.paper_type == PaperType.DOCUMENT:
+      paper_height = DOCUMENT_HEIGHT * 5
+      paper_width = DOCUMENT_WIDTH * 5
+      paper_color = DOCUMENT_COLOR
+    elif self.paper_type == PaperType.NEWSPAPER:
+      paper_height = NEWSPAPER_HEIGHT * 5
+      paper_width = NEWSPAPER_WIDTH * 5
+      paper_color = NEWSPAPER_COLOR
+    elif self.paper_type == PaperType.SPEAKWRITE_SLIP:
+      paper_height = SPEAKWRITE_HEIGHT * 5
+      paper_width = SPEAKWRITE_WIDTH * 5
+      paper_color = SPEAKWRITE_COLOR
+
+    paper_rect = pygame.rect.Rect(0, 0, paper_width, paper_height)
+    paper_rect.center = (gameSetting.SCREEN_WIDTH // 2, gameSetting.SCREEN_HEIGHT // 2)
+    pygame.draw.rect(screen, paper_color, paper_rect)
+    font_surface = font.render(self.prompt, True, LINE_COLOR)
+
+    screen.blit(font_surface, (paper_rect.left + 5 * LINE_SPACING, paper_rect.top + 5 * LINE_SPACING))
+
+papers : list[Paper] = []
+
+def add_prompt():
+  prompt = Paper(PaperType.SPEAKWRITE_SLIP, gameSetting.DOCUMENT_TUBE[0])
+  papers.append(prompt)
